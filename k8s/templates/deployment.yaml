@@ -3,9 +3,9 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: arc-publisher
-  namespace: {{ .Release.Namespace }}
+  namespace: {{.Release.Namespace}}
 spec:
-  replicas: {{ .Values.replicaCount }}
+  replicas: {{.Values.replicaCount}}
   selector:
     matchLabels:
       app: arc-publisher
@@ -18,8 +18,8 @@ spec:
         - name: ghcr
       containers:
         - name: arc-publisher
-          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
-          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          image: "{{.Values.image.repository}}:{{.Values.image.tag}}"
+          imagePullPolicy: {{.Values.image.pullPolicy}}
           ports:
             - containerPort: 8081
           envFrom:
