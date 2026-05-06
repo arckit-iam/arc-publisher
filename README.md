@@ -142,3 +142,5 @@ kubectl create secret generic arc-publisher-db-secret \
 | `promote.yml`      | Pre-release GitHub       | Promote `-dev` → `-rc`              |
 | `promote.yml`      | Release GitHub           | Promote `-rc` → `stable` + deploy  |
 | `bump-helmrelease.yml` | Release GitHub       | PR auto pour bumper le tag FluxCD  |
+
+Maintenant un commit auto est créé au build pour deploy dev
