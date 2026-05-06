@@ -18,12 +18,15 @@ jobs:
   build:
     runs-on: ubuntu-latest
     permissions:
-      contents: read
+      contents: write
       packages: write
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Extract version from tag
         id: version
@@ -60,3 +63,14 @@ jobs:
         with:
           name: k8s-manifests
           path: k8s/
+
+      - name: Bump HelmRelease tag to VERSION-dev
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git fetch origin main
+          git checkout main
+          sed -i "s/tag: \".*\"/tag: \"${{ steps.version.outputs.VERSION }}-dev\"/" k8s/flux/arcpublisher-helmrelease.yaml
+          git add k8s/flux/arcpublisher-helmrelease.yaml
+          git diff --staged --quiet || git commit -m "chore(gitops): bump HelmRelease tag to ${{ steps.version.outputs.VERSION }}-dev [skip ci]"
+          git push origin main
