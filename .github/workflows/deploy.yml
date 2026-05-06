@@ -1,0 +1,65 @@
+name: Deploy
+
+on:
+  workflow_call:
+    inputs:
+      version:
+        description: "Version de l'image Docker à déployer"
+        required: true
+        type: string
+      runner_label:
+        description: "Label du runner self-hosted"
+        required: false
+        type: string
+        default: "iap-k3s"
+      env_name:
+        description: "Nom de l'environnement GitHub"
+        required: false
+        type: string
+        default: "prod"
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version de l'image Docker à déployer"
+        required: true
+        type: string
+      runner_label:
+        description: "Label du runner self-hosted"
+        required: false
+        type: string
+        default: "iap-k3s"
+      env_name:
+        description: "Nom de l'environnement GitHub"
+        required: false
+        type: string
+        default: "prod"
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository_owner }}/arc-publisher
+
+jobs:
+  deploy:
+    environment: ${{ inputs.env_name }}
+    runs-on: [self-hosted, arc-publisher]
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Write kubeconfig to file
+        run: echo "${{ secrets.KUBECONFIG }}" > kubeconfig.yaml
+
+      - name: Create or update PostgreSQL secret
+        env:
+          KUBECONFIG: ${{ github.workspace }}/kubeconfig.yaml
+        run: |
+          kubectl create secret generic arc-publisher-db-secret \
+            --from-literal=username=arc \
+            --from-literal=password=${{ secrets.ARC_PUBLISHER_DB_PASSWORD }} \
+            --dry-run=client -o yaml | kubectl apply -f -
+
+      - name: Apply all FluxCD manifests (k8s/flux)
+        env:
+          KUBECONFIG: ${{ github.workspace }}/kubeconfig.yaml
+        run: |
+          kubectl apply -f k8s/flux/

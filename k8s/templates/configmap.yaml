@@ -1,0 +1,11 @@
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: arc-publisher-config
+data:
+  SPRING_DATASOURCE_URL: "{{ .Values.database.url }}"
+  SPRING_DATASOURCE_USERNAME: "{{ .Values.database.username }}"
+  SPRING_KAFKA_BOOTSTRAP_SERVERS: "{{ .Values.kafka.bootstrapServers }}"
+  ARC_TOPICS_PROVISIONING: "{{ .Values.arc.topics.provisioning }}"
+  SERVER_PORT: "{{ .Values.server.port }}"

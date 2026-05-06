@@ -18,7 +18,7 @@
     <description>IAM Provisioning Scheduler — planifie et publie des events de provisioning sur Kafka</description>
 
     <properties>
-        <java.version>21</java.version>
+        <java.version>25</java.version>
     </properties>
 
     <dependencies>
@@ -36,7 +36,6 @@
         <dependency>
             <groupId>org.postgresql</groupId>
             <artifactId>postgresql</artifactId>
-            <scope>runtime</scope>
         </dependency>
 
         <!-- Kafka -->

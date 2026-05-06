@@ -3,9 +3,9 @@ spring:
     name: arc-publisher
 
   datasource:
-    url: jdbc:postgresql://localhost:5432/arc_publisher
-    username: arc
-    password: arc
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/arc_publisher}
+    username: ${SPRING_DATASOURCE_USERNAME:arc}
+    password: ${SPRING_DATASOURCE_PASSWORD:arc}
     driver-class-name: org.postgresql.Driver
 
   jpa:
@@ -17,14 +17,14 @@ spring:
         dialect: org.hibernate.dialect.PostgreSQLDialect
 
   kafka:
-    bootstrap-servers: localhost:9092
+    bootstrap-servers: ${SPRING_KAFKA_BOOTSTRAP_SERVERS:localhost:9092}
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
 
 arc:
   topics:
-    provisioning: arc.provisioning
+    provisioning: ${ARC_TOPICS_PROVISIONING:arc.provisioning}
 
 server:
-  port: 8081
+  port: ${SERVER_PORT:8081}

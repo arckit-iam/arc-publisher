@@ -1,0 +1,6 @@
+---
+apiVersion: v2
+name: arc-publisher
+version: 0.1.0
+description: Arc Publisher Helm chart — IAM Provisioning Scheduler
+appVersion: "1.0.0"
