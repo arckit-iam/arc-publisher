@@ -1,13 +1,12 @@
 # ── Build stage ────────────────────────────────────────────────────────────────
-FROM eclipse-temurin:25-jdk-noble AS build
+FROM maven:3.9-eclipse-temurin-25 AS build
 
 WORKDIR /build
 COPY pom.xml .
 COPY src ./src
 COPY k8s /build/chart
 
-RUN apt-get update -qq && apt-get install -y -qq maven \
- && mvn package -q -DskipTests \
+RUN mvn package -q -DskipTests \
  && mv target/arc-publisher-*.jar target/arc-publisher.jar
 
 # ── Runtime stage ───────────────────────────────────────────────────────────────
