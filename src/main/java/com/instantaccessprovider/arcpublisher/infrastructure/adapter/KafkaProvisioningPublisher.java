@@ -3,12 +3,19 @@ package com.instantaccessprovider.arcpublisher.infrastructure.adapter;
 import com.instantaccessprovider.arcpublisher.domain.model.Job;
 import com.instantaccessprovider.arcpublisher.domain.model.JobAction;
 import com.instantaccessprovider.arcpublisher.domain.port.ProvisioningEventPort;
-import com.instantaccessprovider.arcpublisher.dto.ProvisioningEventDTO;
+import com.instantaccessprovider.arcpublisher.dto.AssignmentEventDTO;
+import com.instantaccessprovider.arcpublisher.dto.EntitlementEventDTO;
+import com.instantaccessprovider.arcpublisher.dto.IdentityEventDTO;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Component;
+
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
 @Component
 public class KafkaProvisioningPublisher implements ProvisioningEventPort {
 
@@ -29,41 +36,117 @@ public class KafkaProvisioningPublisher implements ProvisioningEventPort {
         this.entitlementTopic = entitlementTopic;
     }
 
-    private String resolveTopic(JobAction action) {
-        return switch (action) {
-            case ASSIGN, UNASSIGN -> assignmentTopic;
-            case CREATE_ENTITLEMENT, DELETE_ENTITLEMENT -> entitlementTopic;
-            default -> identityTopic;
-        };
-    }
-
     @Override
     public void publish(Job job) {
-        ProvisioningEventDTO event = toDTO(job);
+        Object event;
+        String topic;
         String key = job.getIdentityName() + "_" + job.getTargetSystem();
-        String topic = resolveTopic(job.getAction());
+
+        switch (job.getAction()) {
+            case ASSIGN, UNASSIGN -> {
+                event = toAssignmentDTO(job);
+                topic = assignmentTopic;
+            }
+            case CREATE_ENTITLEMENT, DELETE_ENTITLEMENT -> {
+                event = toEntitlementDTO(job);
+                topic = entitlementTopic;
+            }
+            default -> {
+                event = toIdentityDTO(job);
+                topic = identityTopic;
+            }
+        }
+
         try {
             kafkaTemplate.send(topic, key, event).get();
-            log.info("Published provisioning event: jobId={} action={} target={}",
-                    job.getId(), job.getAction(), job.getTargetSystem());
+            log.info("Published provisioning event: jobId={} action={} topic={} target={}",
+                    job.getId(), job.getAction(), topic, job.getTargetSystem());
         } catch (Exception e) {
             throw new RuntimeException("Failed to publish provisioning event for jobId=" + job.getId(), e);
         }
     }
 
-    private ProvisioningEventDTO toDTO(Job job) {
-        ProvisioningEventDTO dto = new ProvisioningEventDTO();
+    private IdentityEventDTO toIdentityDTO(Job job) {
+        IdentityEventDTO dto = new IdentityEventDTO();
         dto.setJobId(job.getId());
-        dto.setAction(job.getAction());
-        dto.setIdentityId(job.getIdentityId());
-        dto.setIdentityName(job.getIdentityName());
-        dto.setTargetSystem(job.getTargetSystem());
-        dto.setEntitlementId(job.getEntitlementId());
-        dto.setEntitlementName(job.getEntitlementName());
-        dto.setScope(job.getScope());
-        dto.setAttributes(job.getAttributes());
-        dto.setExecuteAt(job.getExecuteAt());
         dto.setCorrelationId(job.getCorrelationId());
+        dto.setSystem(job.getTargetSystem());
+        dto.setId(job.getId().toString());
+        dto.setTimestamp(job.getExecuteAt());
+        dto.setEventType(job.getAction().name());
+        dto.setSource(job.getTargetSystem());
+        dto.setName(job.getIdentityId());
+        dto.setDisplayName(job.getIdentityName());
+        dto.setExternalId(job.getIdentityId());
+        dto.setType("user");
+        dto.setChangedAttributes(toChangedAttributes(job.getAttributes()));
         return dto;
     }
+
+    private AssignmentEventDTO toAssignmentDTO(Job job) {
+        AssignmentEventDTO dto = new AssignmentEventDTO();
+        dto.setJobId(job.getId());
+        dto.setCorrelationId(job.getCorrelationId());
+        dto.setSystem(job.getTargetSystem());
+        dto.setId(job.getId().toString());
+        dto.setTimestamp(job.getExecuteAt());
+        dto.setEventType(job.getAction().name());
+        dto.setSource(job.getTargetSystem());
+
+        AssignmentEventDTO.Identity identity = new AssignmentEventDTO.Identity();
+        identity.setName(job.getIdentityId());
+        identity.setDisplayName(job.getIdentityName());
+        identity.setExternalId(job.getIdentityId());
+        identity.setType("user");
+        identity.setSystem(job.getTargetSystem());
+        dto.setIdentity(identity);
+
+        AssignmentEventDTO.Entitlement entitlement = new AssignmentEventDTO.Entitlement();
+        entitlement.setName(job.getEntitlementId());
+        entitlement.setDisplayName(job.getEntitlementName());
+        entitlement.setExternalId(job.getEntitlementId());
+        entitlement.setType("security-group");
+        entitlement.setSystem(job.getTargetSystem());
+        dto.setEntitlement(entitlement);
+
+        if (job.getScope() != null) {
+            AssignmentEventDTO.Scope scope = new AssignmentEventDTO.Scope();
+            AssignmentEventDTO.Scope.Dimension dim = new AssignmentEventDTO.Scope.Dimension();
+            dim.setType("ou");
+            dim.setValue(job.getScope());
+            scope.setDimensions(List.of(dim));
+            dto.setScope(scope);
+        }
+
+        dto.setChangedAttributes(toChangedAttributes(job.getAttributes()));
+        return dto;
+    }
+
+    private EntitlementEventDTO toEntitlementDTO(Job job) {
+        EntitlementEventDTO dto = new EntitlementEventDTO();
+        dto.setJobId(job.getId());
+        dto.setCorrelationId(job.getCorrelationId());
+        dto.setSystem(job.getTargetSystem());
+        dto.setId(job.getId().toString());
+        dto.setTimestamp(job.getExecuteAt());
+        dto.setEventType(job.getAction().name());
+        dto.setSource(job.getTargetSystem());
+        dto.setName(job.getEntitlementId());
+        dto.setDisplayName(job.getEntitlementName());
+        dto.setExternalId(job.getEntitlementId());
+        dto.setType("security-group");
+        dto.setChangedAttributes(toChangedAttributes(job.getAttributes()));
+        return dto;
+    }
+
+    private List<IdentityEventDTO.ChangedAttribute> toChangedAttributes(Map<String, String> attributes) {
+        if (attributes == null || attributes.isEmpty()) return List.of();
+        return attributes.entrySet().stream().map(e -> {
+            IdentityEventDTO.ChangedAttribute attr = new IdentityEventDTO.ChangedAttribute();
+            attr.setName(e.getKey());
+            attr.setNewValue(e.getValue());
+            return attr;
+        }).collect(Collectors.toList());
+    }
 }
+
