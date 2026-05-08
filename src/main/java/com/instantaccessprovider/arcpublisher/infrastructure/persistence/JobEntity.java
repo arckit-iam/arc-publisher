@@ -34,7 +34,7 @@ public class JobEntity {
     private String entitlementName;
     private String scope;
 
-    @ElementCollection
+    @ElementCollection(fetch = jakarta.persistence.FetchType.EAGER)
     @CollectionTable(name = "provisioning_job_attributes",
                      joinColumns = @JoinColumn(name = "job_id"))
     @MapKeyColumn(name = "attr_key")
