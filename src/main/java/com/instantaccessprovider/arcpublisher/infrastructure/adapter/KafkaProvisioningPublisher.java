@@ -118,7 +118,7 @@ public class KafkaProvisioningPublisher implements ProvisioningEventPort {
             dto.setScope(scope);
         }
 
-        dto.setChangedAttributes(toChangedAttributes(job.getAttributes()));
+        dto.setChangedAttributes(toAssignmentChangedAttributes(job.getAttributes()));
         return dto;
     }
 
@@ -135,7 +135,7 @@ public class KafkaProvisioningPublisher implements ProvisioningEventPort {
         dto.setDisplayName(job.getEntitlementName());
         dto.setExternalId(job.getEntitlementId());
         dto.setType("security-group");
-        dto.setChangedAttributes(toChangedAttributes(job.getAttributes()));
+        dto.setChangedAttributes(toEntitlementChangedAttributes(job.getAttributes()));
         return dto;
     }
 
@@ -143,6 +143,26 @@ public class KafkaProvisioningPublisher implements ProvisioningEventPort {
         if (attributes == null || attributes.isEmpty()) return List.of();
         return attributes.entrySet().stream().map(e -> {
             IdentityEventDTO.ChangedAttribute attr = new IdentityEventDTO.ChangedAttribute();
+            attr.setName(e.getKey());
+            attr.setNewValue(e.getValue());
+            return attr;
+        }).collect(Collectors.toList());
+    }
+
+    private List<AssignmentEventDTO.ChangedAttribute> toAssignmentChangedAttributes(Map<String, String> attributes) {
+        if (attributes == null || attributes.isEmpty()) return List.of();
+        return attributes.entrySet().stream().map(e -> {
+            AssignmentEventDTO.ChangedAttribute attr = new AssignmentEventDTO.ChangedAttribute();
+            attr.setName(e.getKey());
+            attr.setNewValue(e.getValue());
+            return attr;
+        }).collect(Collectors.toList());
+    }
+
+    private List<EntitlementEventDTO.ChangedAttribute> toEntitlementChangedAttributes(Map<String, String> attributes) {
+        if (attributes == null || attributes.isEmpty()) return List.of();
+        return attributes.entrySet().stream().map(e -> {
+            EntitlementEventDTO.ChangedAttribute attr = new EntitlementEventDTO.ChangedAttribute();
             attr.setName(e.getKey());
             attr.setNewValue(e.getValue());
             return attr;
