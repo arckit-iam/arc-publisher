@@ -24,7 +24,10 @@ spring:
 
 arc:
   topics:
-    provisioning: ${ARC_TOPICS_PROVISIONING:arc.provisioning}
+    provisioning:
+      identity: ${ARC_TOPICS_PROVISIONING_IDENTITY:arc.provisioning.identity}
+      assignment: ${ARC_TOPICS_PROVISIONING_ASSIGNMENT:arc.provisioning.assignment}
+      entitlement: ${ARC_TOPICS_PROVISIONING_ENTITLEMENT:arc.provisioning.entitlement}
 
 server:
   port: ${SERVER_PORT:8081}

@@ -8,5 +8,7 @@ public enum JobAction {
     DEPROVISION,
     ASSIGN,
     UNASSIGN,
-    MODIFY
+    MODIFY,
+    CREATE_ENTITLEMENT,
+    DELETE_ENTITLEMENT
 }

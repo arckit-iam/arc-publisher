@@ -15,4 +15,7 @@ spring:
 
 arc:
   topics:
-    provisioning: arc.provisioning
+    provisioning:
+      identity: arc.provisioning.identity
+      assignment: arc.provisioning.assignment
+      entitlement: arc.provisioning.entitlement
