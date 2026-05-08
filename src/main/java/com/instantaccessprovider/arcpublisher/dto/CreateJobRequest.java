@@ -1,6 +1,7 @@
 package com.instantaccessprovider.arcpublisher.dto;
 
 import com.instantaccessprovider.arcpublisher.domain.model.JobAction;
+import com.instantaccessprovider.arcpublisher.domain.model.JobTargetType;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
@@ -14,6 +15,9 @@ public class CreateJobRequest {
 
     @NotNull
     private JobAction action;
+
+    @NotNull
+    private JobTargetType targetType;
 
     @NotBlank
     private String identityId;
@@ -36,6 +40,8 @@ public class CreateJobRequest {
 
     public JobAction getAction() { return action; }
     public void setAction(JobAction action) { this.action = action; }
+    public JobTargetType getTargetType() { return targetType; }
+    public void setTargetType(JobTargetType targetType) { this.targetType = targetType; }
     public String getIdentityId() { return identityId; }
     public void setIdentityId(String identityId) { this.identityId = identityId; }
     public String getIdentityName() { return identityName; }

@@ -29,6 +29,7 @@ public class JobApplicationService {
     public Job createJob(CreateJobRequest request) {
         Job job = new Job(
                 UUID.randomUUID(),
+                request.getTargetType(),
                 request.getAction(),
                 request.getIdentityId(),
                 request.getIdentityName(),

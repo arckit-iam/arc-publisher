@@ -12,6 +12,7 @@ import java.util.UUID;
 public class Job {
 
     private final UUID id;
+    private final JobTargetType targetType;
     private final JobAction action;
     private final String identityId;
     private final String identityName;
@@ -26,6 +27,7 @@ public class Job {
     private JobStatus status;
 
     public Job(UUID id,
+               JobTargetType targetType,
                JobAction action,
                String identityId,
                String identityName,
@@ -39,6 +41,7 @@ public class Job {
                String correlationId,
                JobStatus status) {
         this.id = id;
+        this.targetType = targetType;
         this.action = action;
         this.identityId = identityId;
         this.identityName = identityName;
@@ -82,6 +85,7 @@ public class Job {
     }
 
     public UUID getId() { return id; }
+    public JobTargetType getTargetType() { return targetType; }
     public JobAction getAction() { return action; }
     public String getIdentityId() { return identityId; }
     public String getIdentityName() { return identityName; }

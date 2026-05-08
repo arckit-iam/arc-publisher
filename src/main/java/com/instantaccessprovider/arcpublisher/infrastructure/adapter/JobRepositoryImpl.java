@@ -3,6 +3,7 @@ package com.instantaccessprovider.arcpublisher.infrastructure.adapter;
 import com.instantaccessprovider.arcpublisher.domain.model.Job;
 import com.instantaccessprovider.arcpublisher.domain.model.JobAction;
 import com.instantaccessprovider.arcpublisher.domain.model.JobStatus;
+import com.instantaccessprovider.arcpublisher.domain.model.JobTargetType;
 import com.instantaccessprovider.arcpublisher.domain.port.JobRepository;
 import com.instantaccessprovider.arcpublisher.infrastructure.persistence.JobEntity;
 import com.instantaccessprovider.arcpublisher.infrastructure.persistence.SpringJobRepository;
@@ -55,6 +56,7 @@ public class JobRepositoryImpl implements JobRepository {
         JobEntity e = new JobEntity();
         e.setId(job.getId());
         e.setAction(job.getAction().name());
+        e.setTargetType(job.getTargetType().name());
         e.setIdentityId(job.getIdentityId());
         e.setIdentityName(job.getIdentityName());
         e.setTargetSystem(job.getTargetSystem());
@@ -72,6 +74,7 @@ public class JobRepositoryImpl implements JobRepository {
     private Job toDomain(JobEntity e) {
         return new Job(
                 e.getId(),
+                JobTargetType.valueOf(e.getTargetType()),
                 JobAction.valueOf(e.getAction()),
                 e.getIdentityId(),
                 e.getIdentityName(),

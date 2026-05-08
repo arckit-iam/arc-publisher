@@ -1,7 +1,7 @@
 package com.instantaccessprovider.arcpublisher.infrastructure.adapter;
 
 import com.instantaccessprovider.arcpublisher.domain.model.Job;
-import com.instantaccessprovider.arcpublisher.domain.model.JobAction;
+import com.instantaccessprovider.arcpublisher.domain.model.JobTargetType;
 import com.instantaccessprovider.arcpublisher.domain.port.ProvisioningEventPort;
 import com.instantaccessprovider.arcpublisher.dto.AssignmentEventDTO;
 import com.instantaccessprovider.arcpublisher.dto.EntitlementEventDTO;
@@ -42,12 +42,12 @@ public class KafkaProvisioningPublisher implements ProvisioningEventPort {
         String topic;
         String key = job.getIdentityName() + "_" + job.getTargetSystem();
 
-        switch (job.getAction()) {
-            case ASSIGN, UNASSIGN -> {
+        switch (job.getTargetType()) {
+            case ASSIGNMENT -> {
                 event = toAssignmentDTO(job);
                 topic = assignmentTopic;
             }
-            case CREATE_ENTITLEMENT, DELETE_ENTITLEMENT -> {
+            case ENTITLEMENT -> {
                 event = toEntitlementDTO(job);
                 topic = entitlementTopic;
             }
@@ -71,7 +71,6 @@ public class KafkaProvisioningPublisher implements ProvisioningEventPort {
         dto.setJobId(job.getId());
         dto.setCorrelationId(job.getCorrelationId());
         dto.setSystem(job.getTargetSystem());
-        dto.setId(job.getId().toString());
         dto.setTimestamp(job.getExecuteAt());
         dto.setEventType(job.getAction().name());
         dto.setSource(job.getTargetSystem());
@@ -88,7 +87,6 @@ public class KafkaProvisioningPublisher implements ProvisioningEventPort {
         dto.setJobId(job.getId());
         dto.setCorrelationId(job.getCorrelationId());
         dto.setSystem(job.getTargetSystem());
-        dto.setId(job.getId().toString());
         dto.setTimestamp(job.getExecuteAt());
         dto.setEventType(job.getAction().name());
         dto.setSource(job.getTargetSystem());
@@ -127,7 +125,6 @@ public class KafkaProvisioningPublisher implements ProvisioningEventPort {
         dto.setJobId(job.getId());
         dto.setCorrelationId(job.getCorrelationId());
         dto.setSystem(job.getTargetSystem());
-        dto.setId(job.getId().toString());
         dto.setTimestamp(job.getExecuteAt());
         dto.setEventType(job.getAction().name());
         dto.setSource(job.getTargetSystem());

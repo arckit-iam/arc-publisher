@@ -3,6 +3,7 @@ package com.instantaccessprovider.arcpublisher.domain.service;
 import com.instantaccessprovider.arcpublisher.domain.model.Job;
 import com.instantaccessprovider.arcpublisher.domain.model.JobAction;
 import com.instantaccessprovider.arcpublisher.domain.model.JobStatus;
+import com.instantaccessprovider.arcpublisher.domain.model.JobTargetType;
 import com.instantaccessprovider.arcpublisher.domain.port.JobRepository;
 import com.instantaccessprovider.arcpublisher.domain.port.ProvisioningEventPort;
 import org.junit.jupiter.api.BeforeEach;
@@ -34,7 +35,8 @@ class JobSchedulerServiceTest {
     private Job createJob(JobStatus status, OffsetDateTime executeAt) {
         return new Job(
                 UUID.randomUUID(),
-                JobAction.PROVISION,
+                JobTargetType.IDENTITY,
+                JobAction.CREATE,
                 "S-1-5-21-123",
                 "jdupont",
                 "active-directory",

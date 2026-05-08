@@ -22,6 +22,9 @@ public class JobEntity {
     private String action;
 
     @Column(nullable = false)
+    private String targetType;
+
+    @Column(nullable = false)
     private String identityId;
 
     @Column(nullable = false)
@@ -57,6 +60,8 @@ public class JobEntity {
     public void setId(UUID id) { this.id = id; }
     public String getAction() { return action; }
     public void setAction(String action) { this.action = action; }
+    public String getTargetType() { return targetType; }
+    public void setTargetType(String targetType) { this.targetType = targetType; }
     public String getIdentityId() { return identityId; }
     public void setIdentityId(String identityId) { this.identityId = identityId; }
     public String getIdentityName() { return identityName; }

@@ -2,6 +2,7 @@
 CREATE TABLE IF NOT EXISTS provisioning_jobs (
     id              UUID PRIMARY KEY,
     action          VARCHAR(20)  NOT NULL,
+    target_type     VARCHAR(20)  NOT NULL,
     identity_id     VARCHAR(255) NOT NULL,
     identity_name   VARCHAR(255) NOT NULL,
     target_system   VARCHAR(100) NOT NULL,
