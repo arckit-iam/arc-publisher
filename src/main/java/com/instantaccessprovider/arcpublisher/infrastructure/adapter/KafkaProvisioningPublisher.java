@@ -8,7 +8,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Component;
-
 @Component
 public class KafkaProvisioningPublisher implements ProvisioningEventPort {
 
@@ -27,9 +26,13 @@ public class KafkaProvisioningPublisher implements ProvisioningEventPort {
     public void publish(Job job) {
         ProvisioningEventDTO event = toDTO(job);
         String key = job.getIdentityName() + "_" + job.getTargetSystem();
-        kafkaTemplate.send(topic, key, event);
-        log.info("Published provisioning event: jobId={} action={} target={}",
-                job.getId(), job.getAction(), job.getTargetSystem());
+        try {
+            kafkaTemplate.send(topic, key, event).get();
+            log.info("Published provisioning event: jobId={} action={} target={}",
+                    job.getId(), job.getAction(), job.getTargetSystem());
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to publish provisioning event for jobId=" + job.getId(), e);
+        }
     }
 
     private ProvisioningEventDTO toDTO(Job job) {

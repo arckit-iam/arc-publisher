@@ -3,6 +3,8 @@ package com.instantaccessprovider.arcpublisher.domain.service;
 import com.instantaccessprovider.arcpublisher.domain.model.Job;
 import com.instantaccessprovider.arcpublisher.domain.port.JobRepository;
 import com.instantaccessprovider.arcpublisher.domain.port.ProvisioningEventPort;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.time.OffsetDateTime;
 import java.util.List;
@@ -12,6 +14,8 @@ import java.util.List;
  * Aucune dépendance vers l'infrastructure ou les frameworks.
  */
 public class JobSchedulerService {
+
+    private static final Logger log = LoggerFactory.getLogger(JobSchedulerService.class);
 
     private final JobRepository jobRepository;
     private final ProvisioningEventPort provisioningEventPort;
@@ -39,6 +43,8 @@ public class JobSchedulerService {
                 job.markDone();
                 jobRepository.updateStatus(job.getId(), job.getStatus());
             } catch (Exception e) {
+                log.error("Job processing failed: jobId={} action={} error={}",
+                        job.getId(), job.getAction(), e.getMessage(), e);
                 job.markFailed();
                 jobRepository.updateStatus(job.getId(), job.getStatus());
             }
