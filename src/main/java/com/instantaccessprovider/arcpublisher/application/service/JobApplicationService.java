@@ -7,6 +7,7 @@ import com.instantaccessprovider.arcpublisher.dto.CreateJobRequest;
 import org.springframework.stereotype.Service;
 
 import java.time.OffsetDateTime;
+import java.util.List;
 import java.util.UUID;
 
 /**
@@ -44,6 +45,15 @@ public class JobApplicationService {
                 JobStatus.PENDING
         );
         return jobRepository.save(job);
+    }
+
+    public Job getById(UUID id) {
+        return jobRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Job not found: " + id));
+    }
+
+    public List<Job> getAll() {
+        return jobRepository.findAll();
     }
 
     /**

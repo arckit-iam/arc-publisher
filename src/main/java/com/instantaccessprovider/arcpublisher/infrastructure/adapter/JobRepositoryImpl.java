@@ -45,6 +45,14 @@ public class JobRepositoryImpl implements JobRepository {
     }
 
     @Override
+    public List<Job> findAll() {
+        return springJobRepository.findAll()
+                .stream()
+                .map(this::toDomain)
+                .collect(Collectors.toList());
+    }
+
+    @Override
     public void updateStatus(UUID id, JobStatus status) {
         springJobRepository.findById(id).ifPresent(entity -> {
             entity.setStatus(status);

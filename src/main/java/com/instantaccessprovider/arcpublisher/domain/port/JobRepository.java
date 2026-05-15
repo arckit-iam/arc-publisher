@@ -26,6 +26,9 @@ public interface JobRepository {
      */
     List<Job> findDueJobs(OffsetDateTime now);
 
+    /** Récupère tous les jobs. */
+    List<Job> findAll();
+
     /** Met à jour le statut d'un job. */
     void updateStatus(UUID id, JobStatus status);
 }

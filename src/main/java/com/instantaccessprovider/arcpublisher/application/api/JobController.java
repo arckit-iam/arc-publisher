@@ -8,6 +8,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -28,6 +29,16 @@ public class JobController {
     public ResponseEntity<UUID> createJob(@Valid @RequestBody CreateJobRequest request) {
         Job job = jobApplicationService.createJob(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(job.getId());
+    }
+
+    @GetMapping
+    public ResponseEntity<List<Job>> getAllJobs() {
+        return ResponseEntity.ok(jobApplicationService.getAll());
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<Job> getJobById(@PathVariable UUID id) {
+        return ResponseEntity.ok(jobApplicationService.getById(id));
     }
 
     /**
