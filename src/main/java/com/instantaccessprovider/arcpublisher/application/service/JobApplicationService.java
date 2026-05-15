@@ -38,6 +38,7 @@ public class JobApplicationService {
                 request.getEntitlementId(),
                 request.getEntitlementName(),
                 request.getScope(),
+                request.getSource(),
                 request.getAttributes(),
                 request.getExecuteAt(),
                 OffsetDateTime.now(),

@@ -127,11 +127,12 @@ public class KafkaProvisioningPublisher implements ProvisioningEventPort {
         dto.setSystem(job.getTargetSystem());
         dto.setTimestamp(job.getExecuteAt());
         dto.setEventType(job.getAction().name());
-        dto.setSource(job.getTargetSystem());
+        dto.setSource(job.getSource() != null ? job.getSource() : job.getTargetSystem());
         dto.setName(job.getEntitlementId());
         dto.setDisplayName(job.getEntitlementName());
         dto.setExternalId(job.getEntitlementId());
         dto.setType("security-group");
+        dto.setScope(job.getScope());
         dto.setChangedAttributes(toEntitlementChangedAttributes(job.getAttributes()));
         return dto;
     }

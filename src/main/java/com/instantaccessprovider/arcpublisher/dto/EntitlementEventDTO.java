@@ -23,6 +23,7 @@ public class EntitlementEventDTO {
     private String displayName;
     private String externalId;
     private String type;
+    private String scope;
     private List<ChangedAttribute> changedAttributes;
 
     public static class ChangedAttribute {
@@ -59,6 +60,8 @@ public class EntitlementEventDTO {
     public void setExternalId(String externalId) { this.externalId = externalId; }
     public String getType() { return type; }
     public void setType(String type) { this.type = type; }
+    public String getScope() { return scope; }
+    public void setScope(String scope) { this.scope = scope; }
     public List<ChangedAttribute> getChangedAttributes() { return changedAttributes; }
     public void setChangedAttributes(List<ChangedAttribute> changedAttributes) { this.changedAttributes = changedAttributes; }
 }

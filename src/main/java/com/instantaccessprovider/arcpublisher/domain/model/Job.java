@@ -20,6 +20,7 @@ public class Job {
     private final String entitlementId;
     private final String entitlementName;
     private final String scope;
+    private final String source;
     private final Map<String, String> attributes;
     private final OffsetDateTime executeAt;
     private final OffsetDateTime createdAt;
@@ -35,6 +36,7 @@ public class Job {
                String entitlementId,
                String entitlementName,
                String scope,
+               String source,
                Map<String, String> attributes,
                OffsetDateTime executeAt,
                OffsetDateTime createdAt,
@@ -49,6 +51,7 @@ public class Job {
         this.entitlementId = entitlementId;
         this.entitlementName = entitlementName;
         this.scope = scope;
+        this.source = source;
         this.attributes = attributes;
         this.executeAt = executeAt;
         this.createdAt = createdAt;
@@ -93,6 +96,7 @@ public class Job {
     public String getEntitlementId() { return entitlementId; }
     public String getEntitlementName() { return entitlementName; }
     public String getScope() { return scope; }
+    public String getSource() { return source; }
     public Map<String, String> getAttributes() { return attributes; }
     public OffsetDateTime getExecuteAt() { return executeAt; }
     public OffsetDateTime getCreatedAt() { return createdAt; }

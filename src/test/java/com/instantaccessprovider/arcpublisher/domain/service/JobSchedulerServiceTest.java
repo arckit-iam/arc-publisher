@@ -40,7 +40,7 @@ class JobSchedulerServiceTest {
                 "S-1-5-21-123",
                 "jdupont",
                 "active-directory",
-                null, null, null, null,
+                null, null, null, null, null,
                 executeAt,
                 OffsetDateTime.now().minusMinutes(1),
                 "corr-001",

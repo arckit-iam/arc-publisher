@@ -36,6 +36,7 @@ public class JobEntity {
     private String entitlementId;
     private String entitlementName;
     private String scope;
+    private String source;
 
     @ElementCollection(fetch = jakarta.persistence.FetchType.EAGER)
     @CollectionTable(name = "provisioning_job_attributes",
@@ -74,6 +75,8 @@ public class JobEntity {
     public void setEntitlementName(String entitlementName) { this.entitlementName = entitlementName; }
     public String getScope() { return scope; }
     public void setScope(String scope) { this.scope = scope; }
+    public String getSource() { return source; }
+    public void setSource(String source) { this.source = source; }
     public Map<String, String> getAttributes() { return attributes; }
     public void setAttributes(Map<String, String> attributes) { this.attributes = attributes; }
     public OffsetDateTime getExecuteAt() { return executeAt; }

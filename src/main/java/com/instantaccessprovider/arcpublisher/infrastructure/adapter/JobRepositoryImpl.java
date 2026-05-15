@@ -71,6 +71,7 @@ public class JobRepositoryImpl implements JobRepository {
         e.setEntitlementId(job.getEntitlementId());
         e.setEntitlementName(job.getEntitlementName());
         e.setScope(job.getScope());
+        e.setSource(job.getSource());
         e.setAttributes(job.getAttributes());
         e.setExecuteAt(job.getExecuteAt());
         e.setCreatedAt(job.getCreatedAt());
@@ -90,6 +91,7 @@ public class JobRepositoryImpl implements JobRepository {
                 e.getEntitlementId(),
                 e.getEntitlementName(),
                 e.getScope(),
+                e.getSource(),
                 e.getAttributes(),
                 e.getExecuteAt(),
                 e.getCreatedAt(),

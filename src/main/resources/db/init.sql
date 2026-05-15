@@ -9,6 +9,7 @@ CREATE TABLE IF NOT EXISTS provisioning_jobs (
     entitlement_id  VARCHAR(255),
     entitlement_name VARCHAR(255),
     scope           VARCHAR(255),
+    source          VARCHAR(255),
     execute_at      TIMESTAMPTZ  NOT NULL,
     created_at      TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
     correlation_id  VARCHAR(255),
