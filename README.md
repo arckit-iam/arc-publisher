@@ -144,3 +144,11 @@ kubectl create secret generic arc-publisher-db-secret \
 | `bump-helmrelease.yml` | Release GitHub       | PR auto pour bumper le tag FluxCD  |
 
 Maintenant un commit auto est créé au build pour deploy dev
+
+## Licence
+
+Copyright © 2026 Dédale Solutions
+
+Licensed under the EUPL
+
+Ce projet est distribué sous la licence [EUPL-1.2](LICENSE) (European Union Public Licence v. 1.2).

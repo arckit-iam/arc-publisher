@@ -17,6 +17,18 @@
     <name>arc-publisher</name>
     <description>IAM Provisioning Scheduler — planifie et publie des events de provisioning sur Kafka</description>
 
+    <organization>
+        <name>Dédale Solutions</name>
+    </organization>
+
+    <licenses>
+        <license>
+            <name>European Union Public Licence v. 1.2</name>
+            <url>https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
+
     <properties>
         <java.version>25</java.version>
         <!-- Versions compatibles Java 25 -->

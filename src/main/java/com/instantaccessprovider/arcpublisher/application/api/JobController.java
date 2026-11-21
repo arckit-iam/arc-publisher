@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: 2026 Dédale Solutions
+// SPDX-License-Identifier: EUPL-1.2
+
 package com.instantaccessprovider.arcpublisher.application.api;
 
 import com.instantaccessprovider.arcpublisher.application.service.JobApplicationService;
