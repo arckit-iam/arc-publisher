@@ -70,3 +70,7 @@ jobs:
     needs: promote
     if: github.event.action == 'released'
     uses: ./.github/workflows/deploy.yml
+    with:
+      version: ${{ needs.promote.outputs.version }}
+      runner_label: ${{ vars.DEPLOY_RUNNER_LABEL }}
+    secrets: inherit
