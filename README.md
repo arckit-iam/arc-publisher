@@ -7,11 +7,29 @@ Reçoit des **jobs de provisioning** (via REST), les persiste en PostgreSQL, et 
 ## Flux
 
 ```
-Service métier → POST /jobs → arc-publisher (PostgreSQL)
+Service métier (ex : profile) → POST /jobs → arc-publisher (PostgreSQL)
                                     ↓ (à executeAt, via NOTIFY/LISTEN PostgreSQL)
                              Kafka topic: arc.provisioning
                                     ↓
                     Services techniques (AD, LDAP, SaaS apps...)
+```
+
+## Clients
+
+| Service | Usage |
+|---|---|
+| [`profile`](https://github.com/arckit-iam/product-manager) (product-manager) | Crée ou supprime le groupe AD associé à un profil produit : envoie un job `CREATE` ou `DELETE` de type `ENTITLEMENT` via `POST /jobs`. L'événement est publié sur `arc.provisioning.entitlement` et consommé par `arc-agent-ad`. |
+
+Exemple de flux :
+
+```
+profile (POST /products/{productName}/profiles)
+        │  POST /jobs  (action=CREATE, targetType=ENTITLEMENT)
+        ▼
+arc-publisher ──► Kafka : arc.provisioning.entitlement
+                          │
+                          ▼
+                   arc-agent-ad ──► Active Directory (création du groupe)
 ```
 
 ## Architecture hexagonale
@@ -122,10 +140,7 @@ Les tests unitaires du domaine (`JobSchedulerServiceTest`) sont 100% isolés de 
 
 ## Déploiement (Kubernetes / FluxCD)
 
-Le projet utilise Helm + FluxCD pour le déploiement continu :
-
-- `k8s/` — Chart Helm (templates + values)
-- `k8s/flux/` — Manifests FluxCD (GitRepository + HelmRelease)
+Le projet utilise Helm + FluxCD pour le déploiement continu. Le chart Helm et les manifestes FluxCD sont dans le dépôt [arc-kubeorchestrator](https://github.com/arckit-iam/arc-kubeorchestrator) (`arc-publisher/` et `flux/arc-publisher/`).
 
 **Secret requis en amont dans le cluster :**
 
@@ -144,6 +159,15 @@ kubectl create secret generic arc-publisher-db-secret \
 | `bump-helmrelease.yml` | Release GitHub       | PR auto pour bumper le tag FluxCD  |
 
 Maintenant un commit auto est créé au build pour deploy dev
+
+## Documentation
+
+La documentation d'architecture de la plateforme est dans le dépôt [arc-docs](https://github.com/EtiennSalle/arc-docs) :
+
+- [Publication et messaging](https://github.com/EtiennSalle/arc-docs/blob/main/docs/05-publication-messaging.md) : topologie des topics et schémas d'événements.
+- [Architecture globale](https://github.com/EtiennSalle/arc-docs/blob/main/docs/02-architecture-globale.md).
+
+Le déploiement (Helm, Flux, CI/CD) est documenté dans [arc-kubeorchestrator](https://github.com/arckit-iam/arc-kubeorchestrator/tree/main/docs).
 
 ## Licence
 
