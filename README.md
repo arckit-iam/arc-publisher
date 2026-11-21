@@ -136,7 +136,7 @@ Ce script crée :
 - Un index sur `(status, execute_at)` pour les requêtes de jobs dus
 - Le trigger PostgreSQL NOTIFY sur insertion
 
-Sur Kubernetes, ce script est embarqué dans un ConfigMap du dépôt `arc-kubeorchestrator` (`arc-publisher/postgres/configmap-init.yaml`) et exécuté uniquement à la première création de la base. Le fichier du projet reste la source de vérité : toute modification du schéma doit y être faite puis recopiée dans le ConfigMap.
+Sur Kubernetes, ce script est embarqué dans un ConfigMap du dépôt GitOps privé de déploiement et exécuté uniquement à la première création de la base. Le fichier du projet reste la source de vérité : toute modification du schéma doit y être faite puis recopiée dans le ConfigMap.
 
 ## Développement
 
@@ -150,7 +150,7 @@ Les tests unitaires du domaine (`JobSchedulerServiceTest`) sont isolés de Sprin
 
 ## Déploiement (Kubernetes / FluxCD)
 
-Le chart Helm et les manifestes FluxCD sont dans le dépôt [arc-kubeorchestrator](https://github.com/arckit-iam/arc-kubeorchestrator) (`arc-publisher/` et `flux/arc-publisher/`).
+Le déploiement GitOps (Helm, FluxCD) est géré dans un dépôt privé. L'intégration et la mise en production de la plateforme sont proposées par Dédale Solutions en **service payant** : pour en discuter, contactez-nous via le profil GitHub de l'organisation [arckit-iam](https://github.com/arckit-iam).
 
 Secret requis en amont dans le cluster :
 
@@ -171,7 +171,6 @@ kubectl create secret generic arc-publisher-db-secret \
 ## Documentation
 
 - [arc-docs](https://github.com/arckit-iam/arc-docs) : architecture, modèle abstrait IAM, publication et messaging.
-- [arc-kubeorchestrator](https://github.com/arckit-iam/arc-kubeorchestrator/tree/main/docs) : déploiement, Helm, Flux et CI/CD.
 
 ## Contribuer et sécurité
 
