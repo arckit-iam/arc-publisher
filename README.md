@@ -162,10 +162,10 @@ Maintenant un commit auto est créé au build pour deploy dev
 
 ## Documentation
 
-La documentation d'architecture de la plateforme est dans le dépôt [arc-docs](https://github.com/EtiennSalle/arc-docs) :
+La documentation d'architecture de la plateforme est dans le dépôt [arc-docs](https://github.com/arckit-iam/arc-docs) :
 
-- [Publication et messaging](https://github.com/EtiennSalle/arc-docs/blob/main/docs/05-publication-messaging.md) : topologie des topics et schémas d'événements.
-- [Architecture globale](https://github.com/EtiennSalle/arc-docs/blob/main/docs/02-architecture-globale.md).
+- [Publication et messaging](https://github.com/arckit-iam/arc-docs/blob/main/docs/05-publication-messaging.md) : topologie des topics et schémas d'événements.
+- [Architecture globale](https://github.com/arckit-iam/arc-docs/blob/main/docs/02-architecture-globale.md).
 
 Le déploiement (Helm, Flux, CI/CD) est documenté dans [arc-kubeorchestrator](https://github.com/arckit-iam/arc-kubeorchestrator/tree/main/docs).
 
