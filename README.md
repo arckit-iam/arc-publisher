@@ -130,6 +130,8 @@ Ce script crée :
 - Un index sur `(status, execute_at)` pour les requêtes de jobs dus
 - Le trigger PostgreSQL NOTIFY sur insertion
 
+Sur Kubernetes, ce script est embarqué dans un ConfigMap du dépôt `arc-kubeorchestrator` (`arc-publisher/postgres/configmap-init.yaml`) et exécuté uniquement à la première création de la base. Le fichier du projet reste la source de vérité : toute modification du schéma doit y être faite puis recopiée dans le ConfigMap.
+
 ## Tests
 
 ```bash
