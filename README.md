@@ -1,18 +1,30 @@
 # ARC Publisher
 
-Microservice IAM de planification et publication d'événements de provisioning.
+Microservice de planification et de publication de commandes de provisioning de la plateforme [Instant Access Provider](https://github.com/arckit-iam/InstantAccessPublisher).
 
-Reçoit des **jobs de provisioning** (via REST), les persiste en PostgreSQL, et les publie sur le topic Kafka `arc.provisioning` à l'heure prévue. Les services techniques consommateurs (AD, LDAP, applications cibles) écoutent ce topic pour exécuter les opérations concrètes.
+Il reçoit des **jobs de provisioning** via REST, les persiste dans PostgreSQL, puis les publie sur Kafka à l'heure prévue. Les agents (`arc-agent-ad`, etc.) consomment ces commandes et les exécutent sur les systèmes cibles.
 
 ## Flux
 
+```text
+Service métier (ex : profile) ──► POST /jobs ──► arc-publisher (PostgreSQL)
+                                                     │  à executeAt (NOTIFY/LISTEN + scheduler)
+                                                     ▼
+                                   Kafka : arc.provisioning.{identity|assignment|entitlement}
+                                                     │
+                                                     ▼
+                                   Agents (arc-agent-ad, arc-agent-{cible}...)
 ```
-Service métier (ex : profile) → POST /jobs → arc-publisher (PostgreSQL)
-                                    ↓ (à executeAt, via NOTIFY/LISTEN PostgreSQL)
-                             Kafka topic: arc.provisioning
-                                    ↓
-                    Services techniques (AD, LDAP, SaaS apps...)
-```
+
+Le topic de publication dépend du champ `targetType` du job :
+
+| `targetType` | Topic par défaut |
+|---|---|
+| `IDENTITY` | `arc.provisioning.identity` |
+| `ASSIGNMENT` | `arc.provisioning.assignment` |
+| `ENTITLEMENT` | `arc.provisioning.entitlement` |
+
+La clé du message Kafka est `<identityName>_<targetSystem>`.
 
 ## Clients
 
@@ -20,9 +32,7 @@ Service métier (ex : profile) → POST /jobs → arc-publisher (PostgreSQL)
 |---|---|
 | [`profile`](https://github.com/arckit-iam/product-manager) (product-manager) | Crée ou supprime le groupe AD associé à un profil produit : envoie un job `CREATE` ou `DELETE` de type `ENTITLEMENT` via `POST /jobs`. L'événement est publié sur `arc.provisioning.entitlement` et consommé par `arc-agent-ad`. |
 
-Exemple de flux :
-
-```
+```text
 profile (POST /products/{productName}/profiles)
         │  POST /jobs  (action=CREATE, targetType=ENTITLEMENT)
         ▼
@@ -34,87 +44,83 @@ arc-publisher ──► Kafka : arc.provisioning.entitlement
 
 ## Architecture hexagonale
 
-```
+```text
 domain/
-  model/    Job, JobAction (PROVISION/DEPROVISION/ASSIGN/UNASSIGN/MODIFY), JobStatus
+  model/    Job, JobAction (CREATE / MODIFY / DELETE), JobTargetType (IDENTITY / ASSIGNMENT / ENTITLEMENT),
+            JobStatus (PENDING / EXECUTING / DONE / FAILED / CANCELLED)
   port/     JobRepository, ProvisioningEventPort
-  service/  JobSchedulerService — logique de déclenchement, sans dépendance Spring
+  service/  JobSchedulerService : logique de déclenchement, sans dépendance Spring
 
 infrastructure/
-  adapter/  JobRepositoryImpl (JPA), KafkaProvisioningPublisher, SchedulerAdapter (@Scheduled),
-            PgNotifyListener (PostgreSQL LISTEN/NOTIFY — réveil instantané)
-  config/   KafkaProducerConfig, DomainConfig
-  persistence/ JobEntity, SpringJobRepository
+  adapter/      JobRepositoryImpl (JPA), KafkaProvisioningPublisher, SchedulerAdapter (@Scheduled),
+                PgNotifyListener (PostgreSQL LISTEN/NOTIFY : réveil instantané)
+  config/       KafkaProducerConfig, DomainConfig
+  persistence/  JobEntity, SpringJobRepository
 
 application/
   service/  JobApplicationService
   api/      JobController (REST)
 
-dto/        CreateJobRequest, ProvisioningEventDTO
+dto/        CreateJobRequest, IdentityEventDTO, AssignmentEventDTO, EntitlementEventDTO
 ```
 
 ## API REST
 
-| Méthode | Endpoint      | Description                    |
-|---------|---------------|--------------------------------|
-| POST    | `/jobs`       | Crée un job de provisioning    |
-| DELETE  | `/jobs/{id}`  | Annule un job (si PENDING)     |
+| Méthode | Endpoint | Description |
+|---|---|---|
+| `POST` | `/jobs` | Crée un job de provisioning (retourne son identifiant) |
+| `GET` | `/jobs` | Liste les jobs |
+| `GET` | `/jobs/{id}` | Retourne un job |
+| `DELETE` | `/jobs/{id}` | Annule un job (si `PENDING`) |
 
-### Exemple de payload POST /jobs
+### Exemple de payload `POST /jobs`
 
 ```json
 {
-  "action": "PROVISION",
+  "action": "CREATE",
+  "targetType": "ENTITLEMENT",
   "identityId": "S-1-5-21-123456-789",
   "identityName": "jdupont",
-  "targetSystem": "active-directory",
-  "entitlementId": "CN=GRP-FIN,OU=Groups,DC=corp,DC=local",
+  "targetSystem": "ad://corp.example.com",
+  "entitlementId": "CN=GRP-FIN,OU=Groups,DC=corp,DC=example,DC=com",
   "entitlementName": "GRP-FIN",
   "scope": "EMEA",
+  "source": "product-manager",
   "attributes": {
-    "ou": "Finance",
-    "manager": "jmartin"
+    "ou": "Finance"
   },
   "executeAt": "2026-06-01T08:00:00+02:00",
   "correlationId": "uuid-source-event"
 }
 ```
 
-## Event Kafka publié (arc.provisioning)
+Champs obligatoires : `action`, `targetType`, `identityId`, `identityName`, `targetSystem`, `executeAt`.
 
-```json
-{
-  "jobId": "uuid",
-  "action": "PROVISION",
-  "identityId": "S-1-5-21-123456-789",
-  "identityName": "jdupont",
-  "targetSystem": "active-directory",
-  "entitlementId": "CN=GRP-FIN,...",
-  "entitlementName": "GRP-FIN",
-  "scope": "EMEA",
-  "attributes": { "ou": "Finance" },
-  "executeAt": "2026-06-01T08:00:00+02:00",
-  "correlationId": "uuid-source-event"
-}
-```
+## Événements Kafka publiés
+
+Chaque topic porte un DTO dédié (`IdentityEventDTO`, `AssignmentEventDTO`, `EntitlementEventDTO`). Tous contiennent `jobId`, `correlationId`, `system`, `timestamp`, `eventType`, `source`, `changedAttributes` ; le détail de l'objet varie selon le type (identité, droit, ou couple identité/droit avec `scope`).
 
 ## Déclenchement des jobs
 
 Deux mécanismes combinés pour une latence minimale :
 
-1. **PostgreSQL NOTIFY/LISTEN** — un trigger DB émet `pg_notify('job_created', ...)` à chaque insertion. `PgNotifyListener` réveille immédiatement le scheduler (~0ms de latence).
-2. **@Scheduled(1s)** — filet de sécurité en cas de perte de connexion NOTIFY.
+1. **PostgreSQL NOTIFY/LISTEN** : un trigger émet `pg_notify('job_created', ...)` à chaque insertion. `PgNotifyListener` réveille immédiatement le scheduler.
+2. **`@Scheduled` (1 s)** : filet de sécurité en cas de perte de la connexion NOTIFY.
 
 ## Configuration (variables d'environnement)
 
-| Variable                    | Valeur par défaut                                    | Description                    |
-|-----------------------------|------------------------------------------------------|--------------------------------|
-| `SPRING_DATASOURCE_URL`     | `jdbc:postgresql://localhost:5432/arc_publisher`     | URL JDBC PostgreSQL            |
-| `SPRING_DATASOURCE_USERNAME`| `arc`                                                | Utilisateur PostgreSQL         |
-| `SPRING_DATASOURCE_PASSWORD`| `arc`                                                | Mot de passe (Secret K8s)      |
-| `SPRING_KAFKA_BOOTSTRAP_SERVERS` | `localhost:9092`                                | Broker Kafka                   |
-| `ARC_TOPICS_PROVISIONING`   | `arc.provisioning`                                   | Topic Kafka cible              |
-| `SERVER_PORT`               | `8081`                                               | Port HTTP                      |
+| Variable | Valeur par défaut | Description |
+|---|---|---|
+| `SPRING_DATASOURCE_URL` | `jdbc:postgresql://localhost:5432/arc_publisher` | URL JDBC PostgreSQL |
+| `SPRING_DATASOURCE_USERNAME` | `arc` | Utilisateur PostgreSQL |
+| `SPRING_DATASOURCE_PASSWORD` | `arc` | Mot de passe (secret Kubernetes en production) |
+| `SPRING_KAFKA_BOOTSTRAP_SERVERS` | `localhost:9092` | Broker Kafka |
+| `ARC_TOPICS_PROVISIONING_IDENTITY` | `arc.provisioning.identity` | Topic des identités |
+| `ARC_TOPICS_PROVISIONING_ASSIGNMENT` | `arc.provisioning.assignment` | Topic des affectations |
+| `ARC_TOPICS_PROVISIONING_ENTITLEMENT` | `arc.provisioning.entitlement` | Topic des droits |
+| `SERVER_PORT` | `8081` | Port HTTP |
+
+Les valeurs par défaut (`arc` / `arc`) sont réservées au développement local.
 
 ## Initialisation de la base de données
 
@@ -132,49 +138,47 @@ Ce script crée :
 
 Sur Kubernetes, ce script est embarqué dans un ConfigMap du dépôt `arc-kubeorchestrator` (`arc-publisher/postgres/configmap-init.yaml`) et exécuté uniquement à la première création de la base. Le fichier du projet reste la source de vérité : toute modification du schéma doit y être faite puis recopiée dans le ConfigMap.
 
-## Tests
+## Développement
+
+Prérequis : JDK 25 et Maven 3.9.
 
 ```bash
 mvn test
 ```
 
-Les tests unitaires du domaine (`JobSchedulerServiceTest`) sont 100% isolés de Spring, JPA et Kafka — ils utilisent des mocks Mockito.
+Les tests unitaires du domaine (`JobSchedulerServiceTest`) sont isolés de Spring, JPA et Kafka : ils utilisent des mocks Mockito.
 
 ## Déploiement (Kubernetes / FluxCD)
 
-Le projet utilise Helm + FluxCD pour le déploiement continu. Le chart Helm et les manifestes FluxCD sont dans le dépôt [arc-kubeorchestrator](https://github.com/arckit-iam/arc-kubeorchestrator) (`arc-publisher/` et `flux/arc-publisher/`).
+Le chart Helm et les manifestes FluxCD sont dans le dépôt [arc-kubeorchestrator](https://github.com/arckit-iam/arc-kubeorchestrator) (`arc-publisher/` et `flux/arc-publisher/`).
 
-**Secret requis en amont dans le cluster :**
+Secret requis en amont dans le cluster :
 
 ```bash
 kubectl create secret generic arc-publisher-db-secret \
+  --from-literal=username=arc \
   --from-literal=password=<mot-de-passe-postgres>
 ```
 
 ## Pipeline CI/CD
 
-| Workflow           | Déclencheur              | Action                              |
-|--------------------|--------------------------|-------------------------------------|
-| `build.yml`        | Push tag `vX.Y.Z`        | Build Docker → image `-dev`         |
-| `promote.yml`      | Pre-release GitHub       | Promote `-dev` → `-rc`              |
-| `promote.yml`      | Release GitHub           | Promote `-rc` → `stable` + deploy  |
-| `bump-helmrelease.yml` | Release GitHub       | PR auto pour bumper le tag FluxCD  |
-
-Maintenant un commit auto est créé au build pour deploy dev
+| Workflow | Déclencheur | Action |
+|---|---|---|
+| `build.yml` | Push d'un tag `vX.Y.Z` | Tests, build Docker, image `-dev` |
+| `promote.yml` | Pre-release GitHub | Promotion `-dev` vers `-rc` |
+| `promote.yml` | Release GitHub | Promotion `-rc` vers stable et déploiement |
 
 ## Documentation
 
-La documentation d'architecture de la plateforme est dans le dépôt [arc-docs](https://github.com/arckit-iam/arc-docs) :
+- [arc-docs](https://github.com/arckit-iam/arc-docs) : architecture, modèle abstrait IAM, publication et messaging.
+- [arc-kubeorchestrator](https://github.com/arckit-iam/arc-kubeorchestrator/tree/main/docs) : déploiement, Helm, Flux et CI/CD.
 
-- [Publication et messaging](https://github.com/arckit-iam/arc-docs/blob/main/docs/05-publication-messaging.md) : topologie des topics et schémas d'événements.
-- [Architecture globale](https://github.com/arckit-iam/arc-docs/blob/main/docs/02-architecture-globale.md).
+## Contribuer et sécurité
 
-Le déploiement (Helm, Flux, CI/CD) est documenté dans [arc-kubeorchestrator](https://github.com/arckit-iam/arc-kubeorchestrator/tree/main/docs).
+Voir [CONTRIBUTING.md](CONTRIBUTING.md) et [SECURITY.md](SECURITY.md).
 
 ## Licence
 
 Copyright © 2026 Dédale Solutions
-
-Licensed under the EUPL
 
 Ce projet est distribué sous la licence [EUPL-1.2](LICENSE) (European Union Public Licence v. 1.2).
