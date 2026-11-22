@@ -66,12 +66,16 @@ dto/        CreateJobRequest, IdentityEventDTO, AssignmentEventDTO, EntitlementE
 
 ## API REST
 
-| Méthode | Endpoint | Description |
-|---|---|---|
-| `POST` | `/jobs` | Crée un job de provisioning (retourne son identifiant) |
-| `GET` | `/jobs` | Liste les jobs |
-| `GET` | `/jobs/{id}` | Retourne un job |
-| `DELETE` | `/jobs/{id}` | Annule un job (si `PENDING`) |
+Toutes les routes exigent un jeton `Authorization: Bearer <jwt>` émis par [arc-auth](https://github.com/arckit-iam/arc-auth), sauf `/actuator/health` (public, sondes). Sans jeton valide : `401`. Avec un rôle insuffisant : `403`.
+
+| Méthode | Endpoint | Rôle requis | Description |
+|---|---|---|---|
+| `POST` | `/jobs` | `ARC_PUBLISHER` ou `ARC_ADMIN` | Crée un job de provisioning (retourne son identifiant) |
+| `GET` | `/jobs` | `ARC_READER`, `ARC_PUBLISHER` ou `ARC_ADMIN` | Liste les jobs |
+| `GET` | `/jobs/{id}` | `ARC_READER`, `ARC_PUBLISHER` ou `ARC_ADMIN` | Retourne un job |
+| `DELETE` | `/jobs/{id}` | `ARC_PUBLISHER` ou `ARC_ADMIN` | Annule un job (si `PENDING`) |
+
+Le jeton est validé localement (signature via les clés publiques d'arc-auth, `iss`, `aud`, expiration) ; les rôles sont lus dans le claim `roles`.
 
 ### Exemple de payload `POST /jobs`
 
@@ -119,6 +123,9 @@ Deux mécanismes combinés pour une latence minimale :
 | `ARC_TOPICS_PROVISIONING_ASSIGNMENT` | `arc.provisioning.assignment` | Topic des affectations |
 | `ARC_TOPICS_PROVISIONING_ENTITLEMENT` | `arc.provisioning.entitlement` | Topic des droits |
 | `SERVER_PORT` | `8081` | Port HTTP |
+| `ARC_SECURITY_ISSUER_URI` | aucune (obligatoire) | Valeur attendue du claim `iss` (doit égaler `ARC_AUTH_JWT_ISSUER` d'arc-auth) |
+| `ARC_SECURITY_JWK_SET_URI` | `http://localhost:8082/.well-known/jwks.json` | Clés publiques d'arc-auth (récupérées à la demande, mises en cache) |
+| `ARC_SECURITY_AUDIENCE` | `arc` | Valeur attendue du claim `aud` |
 
 Les valeurs par défaut (`arc` / `arc`) sont réservées au développement local.
 

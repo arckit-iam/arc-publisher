@@ -22,6 +22,16 @@ spring:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
 
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          # Clés publiques d'arc-auth, récupérées et mises en cache (aucun appel au démarrage).
+          jwk-set-uri: ${ARC_SECURITY_JWK_SET_URI:http://localhost:8082/.well-known/jwks.json}
+          # Valeur attendue de iss : obligatoire, sans valeur par défaut. Avec jwk-set-uri, aucune découverte OIDC n'a lieu.
+          issuer-uri: ${ARC_SECURITY_ISSUER_URI}
+          audiences: ${ARC_SECURITY_AUDIENCE:arc}
+
 arc:
   topics:
     provisioning:
