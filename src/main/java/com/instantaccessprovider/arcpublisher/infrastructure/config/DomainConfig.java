@@ -3,9 +3,9 @@
 
 package com.instantaccessprovider.arcpublisher.infrastructure.config;
 
-import com.instantaccessprovider.arcpublisher.domain.port.JobRepository;
+import com.instantaccessprovider.arcpublisher.domain.port.OrderRepository;
 import com.instantaccessprovider.arcpublisher.domain.port.ProvisioningEventPort;
-import com.instantaccessprovider.arcpublisher.domain.service.JobSchedulerService;
+import com.instantaccessprovider.arcpublisher.domain.service.OrderSchedulerService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.annotation.EnableScheduling;
@@ -15,8 +15,8 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 public class DomainConfig {
 
     @Bean
-    public JobSchedulerService jobSchedulerService(JobRepository jobRepository,
+    public OrderSchedulerService orderSchedulerService(OrderRepository orderRepository,
                                                     ProvisioningEventPort provisioningEventPort) {
-        return new JobSchedulerService(jobRepository, provisioningEventPort);
+        return new OrderSchedulerService(orderRepository, provisioningEventPort);
     }
 }

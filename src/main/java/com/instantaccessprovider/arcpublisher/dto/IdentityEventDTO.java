@@ -9,11 +9,11 @@ import java.util.UUID;
 
 /**
  * Event publié sur arc.provisioning.identity.
- * Format ISO arc.sync.identity + champs de provisioning (system, jobId, correlationId).
+ * Format ISO arc.sync.identity + champs de provisioning (system, orderId, correlationId).
  */
 public class IdentityEventDTO {
 
-    private UUID jobId;
+    private UUID orderId;
     private String correlationId;
     private String system;
 
@@ -26,6 +26,8 @@ public class IdentityEventDTO {
     private String displayName;
     private String externalId;
     private String type;
+    /** Type métier du compte (ex. standard, admin) : l'agent en déduit l'emplacement cible. */
+    private String accountType;
     private List<ChangedAttribute> changedAttributes;
 
     public static class ChangedAttribute {
@@ -40,8 +42,8 @@ public class IdentityEventDTO {
         public void setNewValue(String newValue) { this.newValue = newValue; }
     }
 
-    public UUID getJobId() { return jobId; }
-    public void setJobId(UUID jobId) { this.jobId = jobId; }
+    public UUID getOrderId() { return orderId; }
+    public void setOrderId(UUID orderId) { this.orderId = orderId; }
     public String getCorrelationId() { return correlationId; }
     public void setCorrelationId(String correlationId) { this.correlationId = correlationId; }
     public String getSystem() { return system; }
@@ -62,6 +64,8 @@ public class IdentityEventDTO {
     public void setExternalId(String externalId) { this.externalId = externalId; }
     public String getType() { return type; }
     public void setType(String type) { this.type = type; }
+    public String getAccountType() { return accountType; }
+    public void setAccountType(String accountType) { this.accountType = accountType; }
     public List<ChangedAttribute> getChangedAttributes() { return changedAttributes; }
     public void setChangedAttributes(List<ChangedAttribute> changedAttributes) { this.changedAttributes = changedAttributes; }
 }

@@ -19,8 +19,8 @@ import org.springframework.security.web.SecurityFilterChain;
  * {@code roles}. L'API est sans état : pas de session, donc pas de protection CSRF.
  *
  * <ul>
- *   <li>{@code POST} et {@code DELETE /jobs} : {@code ARC_PUBLISHER} ou {@code ARC_ADMIN}</li>
- *   <li>{@code GET /jobs} : {@code ARC_READER}, {@code ARC_PUBLISHER} ou {@code ARC_ADMIN}</li>
+ *   <li>{@code POST} et {@code DELETE /orders} : {@code ARC_PUBLISHER} ou {@code ARC_ADMIN}</li>
+ *   <li>{@code GET /orders} : {@code ARC_READER}, {@code ARC_PUBLISHER} ou {@code ARC_ADMIN}</li>
  *   <li>{@code /actuator/health} : public (sondes)</li>
  *   <li>tout le reste : refusé</li>
  * </ul>
@@ -40,9 +40,9 @@ public class SecurityConfig {
                 .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(a -> a
                         .requestMatchers("/actuator/health", "/actuator/health/**").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/jobs", "/jobs/**").hasAnyRole(READER, PUBLISHER, ADMIN)
-                        .requestMatchers(HttpMethod.POST, "/jobs").hasAnyRole(PUBLISHER, ADMIN)
-                        .requestMatchers(HttpMethod.DELETE, "/jobs/**").hasAnyRole(PUBLISHER, ADMIN)
+                        .requestMatchers(HttpMethod.GET, "/orders", "/orders/**").hasAnyRole(READER, PUBLISHER, ADMIN)
+                        .requestMatchers(HttpMethod.POST, "/orders").hasAnyRole(PUBLISHER, ADMIN)
+                        .requestMatchers(HttpMethod.DELETE, "/orders/**").hasAnyRole(PUBLISHER, ADMIN)
                         .anyRequest().denyAll())
                 .oauth2ResourceServer(o -> o.jwt(j -> j.jwtAuthenticationConverter(jwtAuthenticationConverter())))
                 .httpBasic(AbstractHttpConfigurer::disable)

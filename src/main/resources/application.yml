@@ -21,6 +21,11 @@ spring:
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+    consumer:
+      group-id: ${ARC_ORDERS_GROUP_ID:arc-publisher}
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
 
   security:
     oauth2:
@@ -33,6 +38,14 @@ spring:
           audiences: ${ARC_SECURITY_AUDIENCE:arc}
 
 arc:
+  publisher:
+    # api   : seule l'API REST /orders accepte les ordres
+    # kafka : seul le topic d'ordres est consommé (REST désactivé)
+    # both  : les deux
+    mode: ${ARC_PUBLISHER_MODE:api}
+  orders:
+    # File d'ordres alimentée par les managers (messages SUBMIT / CANCEL, clé = id de l'ordre)
+    topic: ${ARC_ORDERS_TOPIC:arc.orders}
   topics:
     provisioning:
       identity: ${ARC_TOPICS_PROVISIONING_IDENTITY:arc.provisioning.identity}

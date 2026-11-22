@@ -3,7 +3,7 @@
 
 package com.instantaccessprovider.arcpublisher.infrastructure.adapter;
 
-import com.instantaccessprovider.arcpublisher.domain.service.JobSchedulerService;
+import com.instantaccessprovider.arcpublisher.domain.service.OrderSchedulerService;
 import org.postgresql.PGConnection;
 import org.postgresql.PGNotification;
 import org.slf4j.Logger;
@@ -20,24 +20,24 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Écoute les notifications PostgreSQL NOTIFY sur le canal "job_created".
- * Réveille le scheduler immédiatement dès qu'un job est créé (latence ~0ms).
+ * Écoute les notifications PostgreSQL NOTIFY sur le canal "order_created".
+ * Réveille le scheduler immédiatement dès qu'un order est créé (latence ~0ms).
  */
 @Component
 public class PgNotifyListener {
 
     private static final Logger log = LoggerFactory.getLogger(PgNotifyListener.class);
-    private static final String CHANNEL = "job_created";
+    private static final String CHANNEL = "order_created";
 
     private final DataSource dataSource;
-    private final JobSchedulerService jobSchedulerService;
+    private final OrderSchedulerService orderSchedulerService;
     private final ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
 
     private volatile boolean running = true;
 
-    public PgNotifyListener(DataSource dataSource, JobSchedulerService jobSchedulerService) {
+    public PgNotifyListener(DataSource dataSource, OrderSchedulerService orderSchedulerService) {
         this.dataSource = dataSource;
-        this.jobSchedulerService = jobSchedulerService;
+        this.orderSchedulerService = orderSchedulerService;
     }
 
     @PostConstruct
@@ -64,7 +64,7 @@ public class PgNotifyListener {
                     PGNotification[] notifications = pgConn.getNotifications(5000);
                     if (notifications != null && notifications.length > 0) {
                         log.debug("Received {} notification(s) on channel {}", notifications.length, CHANNEL);
-                        jobSchedulerService.processDueJobs();
+                        orderSchedulerService.processDueOrders();
                     }
                 }
             } catch (Exception e) {

@@ -4,12 +4,10 @@
 package com.instantaccessprovider.arcpublisher.domain.model;
 
 /**
- * Cycle de vie d'un job de provisioning.
+ * Actions de provisioning supportées par arc-publisher.
  */
-public enum JobStatus {
-    PENDING,
-    EXECUTING,
-    DONE,
-    FAILED,
-    CANCELLED
+public enum OrderAction {
+    CREATE,
+    MODIFY,
+    DELETE
 }

@@ -3,8 +3,8 @@
 
 package com.instantaccessprovider.arcpublisher.infrastructure.adapter;
 
-import com.instantaccessprovider.arcpublisher.domain.model.Job;
-import com.instantaccessprovider.arcpublisher.domain.model.JobTargetType;
+import com.instantaccessprovider.arcpublisher.domain.model.Order;
+import com.instantaccessprovider.arcpublisher.domain.model.OrderTargetType;
 import com.instantaccessprovider.arcpublisher.domain.port.ProvisioningEventPort;
 import com.instantaccessprovider.arcpublisher.dto.AssignmentEventDTO;
 import com.instantaccessprovider.arcpublisher.dto.EntitlementEventDTO;
@@ -40,103 +40,105 @@ public class KafkaProvisioningPublisher implements ProvisioningEventPort {
     }
 
     @Override
-    public void publish(Job job) {
+    public void publish(Order order) {
         Object event;
         String topic;
-        String key = job.getIdentityName() + "_" + job.getTargetSystem();
+        String key = order.getIdentityName() + "_" + order.getTargetSystem();
 
-        switch (job.getTargetType()) {
+        switch (order.getTargetType()) {
             case ASSIGNMENT -> {
-                event = toAssignmentDTO(job);
+                event = toAssignmentDTO(order);
                 topic = assignmentTopic;
             }
             case ENTITLEMENT -> {
-                event = toEntitlementDTO(job);
+                event = toEntitlementDTO(order);
                 topic = entitlementTopic;
             }
             default -> {
-                event = toIdentityDTO(job);
+                event = toIdentityDTO(order);
                 topic = identityTopic;
             }
         }
 
         try {
             kafkaTemplate.send(topic, key, event).get();
-            log.info("Published provisioning event: jobId={} action={} topic={} target={}",
-                    job.getId(), job.getAction(), topic, job.getTargetSystem());
+            log.info("Published provisioning event: orderId={} action={} topic={} target={}",
+                    order.getId(), order.getAction(), topic, order.getTargetSystem());
         } catch (Exception e) {
-            throw new RuntimeException("Failed to publish provisioning event for jobId=" + job.getId(), e);
+            throw new RuntimeException("Failed to publish provisioning event for orderId=" + order.getId(), e);
         }
     }
 
-    private IdentityEventDTO toIdentityDTO(Job job) {
+    private IdentityEventDTO toIdentityDTO(Order order) {
         IdentityEventDTO dto = new IdentityEventDTO();
-        dto.setJobId(job.getId());
-        dto.setCorrelationId(job.getCorrelationId());
-        dto.setSystem(job.getTargetSystem());
-        dto.setTimestamp(job.getExecuteAt());
-        dto.setEventType(job.getAction().name());
-        dto.setSource(job.getTargetSystem());
-        dto.setName(job.getIdentityId());
-        dto.setDisplayName(job.getIdentityName());
-        dto.setExternalId(job.getIdentityId());
+        dto.setOrderId(order.getId());
+        dto.setCorrelationId(order.getCorrelationId());
+        dto.setSystem(order.getTargetSystem());
+        dto.setTimestamp(order.getExecuteAt());
+        dto.setEventType(order.getAction().name());
+        dto.setSource(order.getTargetSystem());
+        dto.setName(order.getIdentityId());
+        dto.setDisplayName(order.getIdentityName());
+        dto.setExternalId(order.getIdentityId());
         dto.setType("user");
-        dto.setChangedAttributes(toChangedAttributes(job.getAttributes()));
+        dto.setAccountType(order.getAccountType());
+        dto.setChangedAttributes(toChangedAttributes(order.getAttributes()));
         return dto;
     }
 
-    private AssignmentEventDTO toAssignmentDTO(Job job) {
+    private AssignmentEventDTO toAssignmentDTO(Order order) {
         AssignmentEventDTO dto = new AssignmentEventDTO();
-        dto.setJobId(job.getId());
-        dto.setCorrelationId(job.getCorrelationId());
-        dto.setSystem(job.getTargetSystem());
-        dto.setTimestamp(job.getExecuteAt());
-        dto.setEventType(job.getAction().name());
-        dto.setSource(job.getTargetSystem());
+        dto.setOrderId(order.getId());
+        dto.setCorrelationId(order.getCorrelationId());
+        dto.setSystem(order.getTargetSystem());
+        dto.setTimestamp(order.getExecuteAt());
+        dto.setEventType(order.getAction().name());
+        dto.setSource(order.getTargetSystem());
 
         AssignmentEventDTO.Identity identity = new AssignmentEventDTO.Identity();
-        identity.setName(job.getIdentityId());
-        identity.setDisplayName(job.getIdentityName());
-        identity.setExternalId(job.getIdentityId());
+        identity.setName(order.getIdentityId());
+        identity.setDisplayName(order.getIdentityName());
+        identity.setExternalId(order.getIdentityId());
         identity.setType("user");
-        identity.setSystem(job.getTargetSystem());
+        identity.setAccountType(order.getAccountType());
+        identity.setSystem(order.getTargetSystem());
         dto.setIdentity(identity);
 
         AssignmentEventDTO.Entitlement entitlement = new AssignmentEventDTO.Entitlement();
-        entitlement.setName(job.getEntitlementId());
-        entitlement.setDisplayName(job.getEntitlementName());
-        entitlement.setExternalId(job.getEntitlementId());
+        entitlement.setName(order.getEntitlementId());
+        entitlement.setDisplayName(order.getEntitlementName());
+        entitlement.setExternalId(order.getEntitlementId());
         entitlement.setType("security-group");
-        entitlement.setSystem(job.getTargetSystem());
+        entitlement.setSystem(order.getTargetSystem());
         dto.setEntitlement(entitlement);
 
-        if (job.getScope() != null) {
+        if (order.getScope() != null) {
             AssignmentEventDTO.Scope scope = new AssignmentEventDTO.Scope();
             AssignmentEventDTO.Scope.Dimension dim = new AssignmentEventDTO.Scope.Dimension();
             dim.setType("ou");
-            dim.setValue(job.getScope());
+            dim.setValue(order.getScope());
             scope.setDimensions(List.of(dim));
             dto.setScope(scope);
         }
 
-        dto.setChangedAttributes(toAssignmentChangedAttributes(job.getAttributes()));
+        dto.setChangedAttributes(toAssignmentChangedAttributes(order.getAttributes()));
         return dto;
     }
 
-    private EntitlementEventDTO toEntitlementDTO(Job job) {
+    private EntitlementEventDTO toEntitlementDTO(Order order) {
         EntitlementEventDTO dto = new EntitlementEventDTO();
-        dto.setJobId(job.getId());
-        dto.setCorrelationId(job.getCorrelationId());
-        dto.setSystem(job.getTargetSystem());
-        dto.setTimestamp(job.getExecuteAt());
-        dto.setEventType(job.getAction().name());
-        dto.setSource(job.getSource() != null ? job.getSource() : job.getTargetSystem());
-        dto.setName(job.getEntitlementId());
-        dto.setDisplayName(job.getEntitlementName());
-        dto.setExternalId(job.getEntitlementId());
+        dto.setOrderId(order.getId());
+        dto.setCorrelationId(order.getCorrelationId());
+        dto.setSystem(order.getTargetSystem());
+        dto.setTimestamp(order.getExecuteAt());
+        dto.setEventType(order.getAction().name());
+        dto.setSource(order.getSource() != null ? order.getSource() : order.getTargetSystem());
+        dto.setName(order.getEntitlementId());
+        dto.setDisplayName(order.getEntitlementName());
+        dto.setExternalId(order.getEntitlementId());
         dto.setType("security-group");
-        dto.setScope(job.getScope());
-        dto.setChangedAttributes(toEntitlementChangedAttributes(job.getAttributes()));
+        dto.setScope(order.getScope());
+        dto.setChangedAttributes(toEntitlementChangedAttributes(order.getAttributes()));
         return dto;
     }
 

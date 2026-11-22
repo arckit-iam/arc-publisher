@@ -3,7 +3,7 @@
 
 package com.instantaccessprovider.arcpublisher.infrastructure.persistence;
 
-import com.instantaccessprovider.arcpublisher.domain.model.JobStatus;
+import com.instantaccessprovider.arcpublisher.domain.model.OrderStatus;
 import jakarta.persistence.*;
 
 import java.time.OffsetDateTime;
@@ -11,12 +11,12 @@ import java.util.Map;
 import java.util.UUID;
 
 /**
- * Entité JPA pour la table provisioning_jobs.
- * Séparée du modèle domaine Job — pas de dépendance croisée.
+ * Entité JPA pour la table provisioning_orders.
+ * Séparée du modèle domaine Order — pas de dépendance croisée.
  */
 @Entity
-@Table(name = "provisioning_jobs")
-public class JobEntity {
+@Table(name = "provisioning_orders")
+public class OrderEntity {
 
     @Id
     private UUID id;
@@ -39,11 +39,12 @@ public class JobEntity {
     private String entitlementId;
     private String entitlementName;
     private String scope;
+    private String accountType;
     private String source;
 
     @ElementCollection(fetch = jakarta.persistence.FetchType.EAGER)
-    @CollectionTable(name = "provisioning_job_attributes",
-                     joinColumns = @JoinColumn(name = "job_id"))
+    @CollectionTable(name = "provisioning_order_attributes",
+                     joinColumns = @JoinColumn(name = "order_id"))
     @MapKeyColumn(name = "attr_key")
     @Column(name = "attr_value")
     private Map<String, String> attributes;
@@ -58,7 +59,7 @@ public class JobEntity {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private JobStatus status;
+    private OrderStatus status;
 
     public UUID getId() { return id; }
     public void setId(UUID id) { this.id = id; }
@@ -78,6 +79,8 @@ public class JobEntity {
     public void setEntitlementName(String entitlementName) { this.entitlementName = entitlementName; }
     public String getScope() { return scope; }
     public void setScope(String scope) { this.scope = scope; }
+    public String getAccountType() { return accountType; }
+    public void setAccountType(String accountType) { this.accountType = accountType; }
     public String getSource() { return source; }
     public void setSource(String source) { this.source = source; }
     public Map<String, String> getAttributes() { return attributes; }
@@ -88,6 +91,6 @@ public class JobEntity {
     public void setCreatedAt(OffsetDateTime createdAt) { this.createdAt = createdAt; }
     public String getCorrelationId() { return correlationId; }
     public void setCorrelationId(String correlationId) { this.correlationId = correlationId; }
-    public JobStatus getStatus() { return status; }
-    public void setStatus(JobStatus status) { this.status = status; }
+    public OrderStatus getStatus() { return status; }
+    public void setStatus(OrderStatus status) { this.status = status; }
 }

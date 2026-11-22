@@ -3,7 +3,7 @@
 
 package com.instantaccessprovider.arcpublisher.infrastructure.adapter;
 
-import com.instantaccessprovider.arcpublisher.domain.service.JobSchedulerService;
+import com.instantaccessprovider.arcpublisher.domain.service.OrderSchedulerService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -20,22 +20,22 @@ public class SchedulerAdapter {
 
     private static final Logger log = LoggerFactory.getLogger(SchedulerAdapter.class);
 
-    private final JobSchedulerService jobSchedulerService;
+    private final OrderSchedulerService orderSchedulerService;
 
-    public SchedulerAdapter(JobSchedulerService jobSchedulerService) {
-        this.jobSchedulerService = jobSchedulerService;
+    public SchedulerAdapter(OrderSchedulerService orderSchedulerService) {
+        this.orderSchedulerService = orderSchedulerService;
     }
 
     /**
-     * Vérifie toutes les secondes si des jobs sont dus.
+     * Vérifie toutes les secondes si des orders sont dus.
      * Filet de sécurité si le NOTIFY PostgreSQL est manqué.
      */
     @Scheduled(fixedDelay = 1000)
     public void tick() {
         try {
-            jobSchedulerService.processDueJobs();
+            orderSchedulerService.processDueOrders();
         } catch (Exception e) {
-            log.error("Error processing due jobs", e);
+            log.error("Error processing due orders", e);
         }
     }
 }

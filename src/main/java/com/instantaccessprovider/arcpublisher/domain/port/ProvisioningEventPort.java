@@ -3,7 +3,7 @@
 
 package com.instantaccessprovider.arcpublisher.domain.port;
 
-import com.instantaccessprovider.arcpublisher.domain.model.Job;
+import com.instantaccessprovider.arcpublisher.domain.model.Order;
 
 /**
  * Port de sortie — publication des events de provisioning sur Kafka.
@@ -12,9 +12,9 @@ import com.instantaccessprovider.arcpublisher.domain.model.Job;
 public interface ProvisioningEventPort {
 
     /**
-     * Publie un event de provisioning correspondant au job fourni.
+     * Publie un event de provisioning correspondant au order fourni.
      *
-     * @param job le job dont l'heure d'exécution est atteinte
+     * @param order le order dont l'heure d'exécution est atteinte
      */
-    void publish(Job job);
+    void publish(Order order);
 }

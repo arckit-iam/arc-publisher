@@ -1,5 +1,5 @@
--- Création de la table principale des jobs de provisioning
-CREATE TABLE IF NOT EXISTS provisioning_jobs (
+-- Création de la table principale des orders de provisioning
+CREATE TABLE IF NOT EXISTS provisioning_orders (
     id              UUID PRIMARY KEY,
     action          VARCHAR(20)  NOT NULL,
     target_type     VARCHAR(20)  NOT NULL,
@@ -9,6 +9,7 @@ CREATE TABLE IF NOT EXISTS provisioning_jobs (
     entitlement_id  VARCHAR(255),
     entitlement_name VARCHAR(255),
     scope           VARCHAR(255),
+    account_type    VARCHAR(255),
     source          VARCHAR(255),
     execute_at      TIMESTAMPTZ  NOT NULL,
     created_at      TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
@@ -17,30 +18,30 @@ CREATE TABLE IF NOT EXISTS provisioning_jobs (
 );
 
 -- Table des attributs additionnels (map clé/valeur)
-CREATE TABLE IF NOT EXISTS provisioning_job_attributes (
-    job_id     UUID         NOT NULL REFERENCES provisioning_jobs(id) ON DELETE CASCADE,
+CREATE TABLE IF NOT EXISTS provisioning_order_attributes (
+    order_id     UUID         NOT NULL REFERENCES provisioning_orders(id) ON DELETE CASCADE,
     attr_key   VARCHAR(100) NOT NULL,
     attr_value VARCHAR(500),
-    PRIMARY KEY (job_id, attr_key)
+    PRIMARY KEY (order_id, attr_key)
 );
 
--- Index pour la requête des jobs dus
-CREATE INDEX IF NOT EXISTS idx_jobs_status_execute_at
-    ON provisioning_jobs (status, execute_at)
+-- Index pour la requête des orders dus
+CREATE INDEX IF NOT EXISTS idx_orders_status_execute_at
+    ON provisioning_orders (status, execute_at)
     WHERE status = 'PENDING';
 
 -- Fonction de notification PostgreSQL
-CREATE OR REPLACE FUNCTION notify_job_created()
+CREATE OR REPLACE FUNCTION notify_order_created()
 RETURNS TRIGGER AS $$
 BEGIN
-    PERFORM pg_notify('job_created', NEW.id::text);
+    PERFORM pg_notify('order_created', NEW.id::text);
     RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
 
--- Trigger : émet NOTIFY à chaque insertion d'un job PENDING
-CREATE TRIGGER trg_job_created
-AFTER INSERT ON provisioning_jobs
+-- Trigger : émet NOTIFY à chaque insertion d'un order PENDING
+CREATE TRIGGER trg_order_created
+AFTER INSERT ON provisioning_orders
 FOR EACH ROW
 WHEN (NEW.status = 'PENDING')
-EXECUTE FUNCTION notify_job_created();
+EXECUTE FUNCTION notify_order_created();

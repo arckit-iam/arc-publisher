@@ -3,9 +3,9 @@
 
 package com.instantaccessprovider.arcpublisher.infrastructure.config;
 
-import com.instantaccessprovider.arcpublisher.application.api.JobController;
-import com.instantaccessprovider.arcpublisher.application.service.JobApplicationService;
-import com.instantaccessprovider.arcpublisher.domain.model.Job;
+import com.instantaccessprovider.arcpublisher.application.api.OrderController;
+import com.instantaccessprovider.arcpublisher.application.service.OrderApplicationService;
+import com.instantaccessprovider.arcpublisher.domain.model.Order;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -35,11 +35,11 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * Vérifie, de la validation du jeton jusqu'au contrôleur, qui peut appeler quoi.
  * Le décodeur est remplacé par un décodeur de test : la signature n'est pas l'objet ici.
  */
-@WebMvcTest(JobController.class)
-@Import({SecurityConfig.class, JobControllerSecurityTest.TestDecoderConfig.class})
-class JobControllerSecurityTest {
+@WebMvcTest(OrderController.class)
+@Import({SecurityConfig.class, OrderControllerSecurityTest.TestDecoderConfig.class})
+class OrderControllerSecurityTest {
 
-    private static final String VALID_JOB = """
+    private static final String VALID_ORDER = """
             {"action":"CREATE","targetType":"IDENTITY","identityId":"zoe","identityName":"Zoe",
              "targetSystem":"ldap://LDAP01","executeAt":"2030-01-01T10:00:00Z"}""";
 
@@ -73,7 +73,7 @@ class JobControllerSecurityTest {
     private MockMvc mvc;
 
     @MockitoBean
-    private JobApplicationService service;
+    private OrderApplicationService service;
 
     private static String bearer(String token) {
         return "Bearer " + token;
@@ -81,22 +81,22 @@ class JobControllerSecurityTest {
 
     @Test
     void rejectsRequestsWithoutToken() throws Exception {
-        mvc.perform(get("/jobs")).andExpect(status().isUnauthorized());
-        mvc.perform(get("/jobs/" + UUID.randomUUID())).andExpect(status().isUnauthorized());
-        mvc.perform(post("/jobs").contentType(MediaType.APPLICATION_JSON).content(VALID_JOB))
+        mvc.perform(get("/orders")).andExpect(status().isUnauthorized());
+        mvc.perform(get("/orders/" + UUID.randomUUID())).andExpect(status().isUnauthorized());
+        mvc.perform(post("/orders").contentType(MediaType.APPLICATION_JSON).content(VALID_ORDER))
                 .andExpect(status().isUnauthorized());
-        mvc.perform(delete("/jobs/" + UUID.randomUUID())).andExpect(status().isUnauthorized());
+        mvc.perform(delete("/orders/" + UUID.randomUUID())).andExpect(status().isUnauthorized());
     }
 
     @Test
     void rejectsInvalidToken() throws Exception {
-        mvc.perform(get("/jobs").header("Authorization", bearer("forged")))
+        mvc.perform(get("/orders").header("Authorization", bearer("forged")))
                 .andExpect(status().isUnauthorized());
     }
 
     @Test
     void rejectsBasicAuthentication() throws Exception {
-        mvc.perform(get("/jobs").header("Authorization", "Basic YWxpY2U6cHc="))
+        mvc.perform(get("/orders").header("Authorization", "Basic YWxpY2U6cHc="))
                 .andExpect(status().isUnauthorized());
     }
 
@@ -104,48 +104,64 @@ class JobControllerSecurityTest {
     void readerCanReadButNotWrite() throws Exception {
         when(service.getAll()).thenReturn(List.of());
 
-        mvc.perform(get("/jobs").header("Authorization", bearer("reader"))).andExpect(status().isOk());
-        mvc.perform(post("/jobs").header("Authorization", bearer("reader"))
-                        .contentType(MediaType.APPLICATION_JSON).content(VALID_JOB))
+        mvc.perform(get("/orders").header("Authorization", bearer("reader"))).andExpect(status().isOk());
+        mvc.perform(post("/orders").header("Authorization", bearer("reader"))
+                        .contentType(MediaType.APPLICATION_JSON).content(VALID_ORDER))
                 .andExpect(status().isForbidden());
-        mvc.perform(delete("/jobs/" + UUID.randomUUID()).header("Authorization", bearer("reader")))
+        mvc.perform(delete("/orders/" + UUID.randomUUID()).header("Authorization", bearer("reader")))
                 .andExpect(status().isForbidden());
     }
 
     @Test
     void publisherCanCreateReadAndCancel() throws Exception {
-        Job job = mock(Job.class);
-        when(job.getId()).thenReturn(UUID.randomUUID());
-        when(service.createJob(any())).thenReturn(job);
+        Order order = mock(Order.class);
+        when(order.getId()).thenReturn(UUID.randomUUID());
+        when(service.createOrder(any())).thenReturn(order);
         when(service.getAll()).thenReturn(List.of());
 
-        mvc.perform(post("/jobs").header("Authorization", bearer("publisher"))
-                        .contentType(MediaType.APPLICATION_JSON).content(VALID_JOB))
+        mvc.perform(post("/orders").header("Authorization", bearer("publisher"))
+                        .contentType(MediaType.APPLICATION_JSON).content(VALID_ORDER))
                 .andExpect(status().isCreated());
-        mvc.perform(get("/jobs").header("Authorization", bearer("publisher"))).andExpect(status().isOk());
-        mvc.perform(delete("/jobs/" + UUID.randomUUID()).header("Authorization", bearer("publisher")))
+        mvc.perform(get("/orders").header("Authorization", bearer("publisher"))).andExpect(status().isOk());
+        mvc.perform(delete("/orders/" + UUID.randomUUID()).header("Authorization", bearer("publisher")))
                 .andExpect(status().isNoContent());
     }
 
     @Test
     void adminCanDoEverything() throws Exception {
-        Job job = mock(Job.class);
-        when(job.getId()).thenReturn(UUID.randomUUID());
-        when(service.createJob(any())).thenReturn(job);
+        Order order = mock(Order.class);
+        when(order.getId()).thenReturn(UUID.randomUUID());
+        when(service.createOrder(any())).thenReturn(order);
         when(service.getAll()).thenReturn(List.of());
 
-        mvc.perform(post("/jobs").header("Authorization", bearer("admin"))
-                        .contentType(MediaType.APPLICATION_JSON).content(VALID_JOB))
+        mvc.perform(post("/orders").header("Authorization", bearer("admin"))
+                        .contentType(MediaType.APPLICATION_JSON).content(VALID_ORDER))
                 .andExpect(status().isCreated());
-        mvc.perform(get("/jobs").header("Authorization", bearer("admin"))).andExpect(status().isOk());
-        mvc.perform(delete("/jobs/" + UUID.randomUUID()).header("Authorization", bearer("admin")))
+        mvc.perform(get("/orders").header("Authorization", bearer("admin"))).andExpect(status().isOk());
+        mvc.perform(delete("/orders/" + UUID.randomUUID()).header("Authorization", bearer("admin")))
                 .andExpect(status().isNoContent());
     }
 
     @Test
+    void cancelMapsBusinessErrorsToHttpStatus() throws Exception {
+        UUID unknown = UUID.randomUUID();
+        UUID executed = UUID.randomUUID();
+        org.mockito.Mockito.doThrow(new com.instantaccessprovider.arcpublisher.domain.exception.OrderNotFoundException(unknown))
+                .when(service).cancelOrder(unknown);
+        org.mockito.Mockito.doThrow(new com.instantaccessprovider.arcpublisher.domain.exception.OrderNotCancellableException(
+                        executed, com.instantaccessprovider.arcpublisher.domain.model.OrderStatus.DONE))
+                .when(service).cancelOrder(executed);
+
+        mvc.perform(delete("/orders/" + unknown).header("Authorization", bearer("publisher")))
+                .andExpect(status().isNotFound());
+        mvc.perform(delete("/orders/" + executed).header("Authorization", bearer("publisher")))
+                .andExpect(status().isConflict());
+    }
+
+    @Test
     void tokenWithoutArcRoleIsForbidden() throws Exception {
-        mvc.perform(get("/jobs").header("Authorization", bearer("norole"))).andExpect(status().isForbidden());
-        mvc.perform(get("/jobs").header("Authorization", bearer("unknownrole"))).andExpect(status().isForbidden());
+        mvc.perform(get("/orders").header("Authorization", bearer("norole"))).andExpect(status().isForbidden());
+        mvc.perform(get("/orders").header("Authorization", bearer("unknownrole"))).andExpect(status().isForbidden());
     }
 
     @Test

@@ -9,11 +9,11 @@ import java.util.UUID;
 
 /**
  * Event publié sur arc.provisioning.entitlement.
- * Format ISO arc.sync.entitlement + champs de provisioning (system, jobId, correlationId).
+ * Format ISO arc.sync.entitlement + champs de provisioning (system, orderId, correlationId).
  */
 public class EntitlementEventDTO {
 
-    private UUID jobId;
+    private UUID orderId;
     private String correlationId;
     private String system;
 
@@ -41,8 +41,8 @@ public class EntitlementEventDTO {
         public void setNewValue(String newValue) { this.newValue = newValue; }
     }
 
-    public UUID getJobId() { return jobId; }
-    public void setJobId(UUID jobId) { this.jobId = jobId; }
+    public UUID getOrderId() { return orderId; }
+    public void setOrderId(UUID orderId) { this.orderId = orderId; }
     public String getCorrelationId() { return correlationId; }
     public void setCorrelationId(String correlationId) { this.correlationId = correlationId; }
     public String getSystem() { return system; }

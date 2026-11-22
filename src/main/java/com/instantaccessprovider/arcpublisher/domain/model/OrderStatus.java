@@ -4,10 +4,12 @@
 package com.instantaccessprovider.arcpublisher.domain.model;
 
 /**
- * Type d'objet ciblé par le job — détermine le topic Kafka de publication.
+ * Cycle de vie d'un order de provisioning.
  */
-public enum JobTargetType {
-    IDENTITY,
-    ASSIGNMENT,
-    ENTITLEMENT
+public enum OrderStatus {
+    PENDING,
+    EXECUTING,
+    DONE,
+    FAILED,
+    CANCELLED
 }
