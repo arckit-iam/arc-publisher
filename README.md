@@ -173,7 +173,7 @@ kubectl create secret generic arc-publisher-db-secret \
 |---|---|---|
 | `build.yml` | Push d'un tag `vX.Y.Z` | Tests, build Docker, image `-dev` |
 | `promote.yml` | Pre-release GitHub | Promotion `-dev` vers `-rc` |
-| `promote.yml` | Release GitHub | Promotion `-rc` vers stable et déploiement |
+| `promote.yml` | Release GitHub | Promotion `-rc` vers stable |
 
 ## Documentation
 
